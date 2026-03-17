@@ -1,0 +1,944 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+<meta charset="UTF-8">
+<link rel="manifest" href="/manifest.json">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="default">
+<meta name="apple-mobile-web-app-title" content="ISP/CRM">
+<link rel="apple-touch-icon" href="/icon-192.png">
+<meta name="theme-color" content="#2563eb">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>代理店管理システム v4</title>
+<style>
+@import url('https://fonts.googleapis.com/css2?family=Noto+Sans+JP:wght@300;400;500;700&family=DM+Mono:wght@400;500&display=swap');
+:root{
+  --bg:#f4f6fa;--bg2:#ffffff;--bg3:#f0f2f7;--bg4:#e8ecf4;
+  --border:#e2e6ef;--border2:#d0d6e4;
+  --accent:#2563eb;--accent2:#3b82f6;--accent-light:#eff6ff;
+  --green:#16a34a;--green-bg:#f0fdf4;--green-border:#bbf7d0;
+  --yellow:#d97706;--yellow-bg:#fffbeb;--yellow-border:#fde68a;
+  --red:#dc2626;--red-bg:#fef2f2;--red-border:#fecaca;
+  --purple:#7c3aed;--purple-bg:#f5f3ff;--purple-border:#ddd6fe;
+  --cyan:#0891b2;--cyan-bg:#ecfeff;
+  --gray:#6b7280;--gray-bg:#f9fafb;
+  --text:#111827;--text2:#4b5563;--text3:#9ca3af;
+  --shadow:0 1px 3px rgba(0,0,0,.08),0 1px 2px rgba(0,0,0,.05);
+  --shadow-md:0 4px 6px rgba(0,0,0,.07),0 2px 4px rgba(0,0,0,.05);
+}
+*{margin:0;padding:0;box-sizing:border-box;}
+body{font-family:'Noto Sans JP',sans-serif;background:var(--bg);color:var(--text);min-height:100vh;font-size:13px;}
+
+/* HEADER */
+header{background:var(--bg2);border-bottom:1px solid var(--border);padding:0 20px;height:52px;display:flex;align-items:center;justify-content:space-between;position:sticky;top:0;z-index:100;box-shadow:var(--shadow);}
+.logo{font-family:'DM Mono',monospace;font-size:14px;font-weight:500;color:var(--accent);}
+.logo em{color:var(--text3);font-style:normal;}
+.hdr-r{display:flex;align-items:center;gap:8px;}
+.hdr-badge{font-family:'DM Mono',monospace;font-size:11px;background:var(--bg3);border:1px solid var(--border2);color:var(--text2);padding:3px 9px;border-radius:4px;}
+
+/* LAYOUT */
+.layout{display:flex;height:calc(100vh - 52px);}
+aside{width:210px;min-width:210px;background:var(--bg2);border-right:1px solid var(--border);padding:12px 0;overflow-y:auto;flex-shrink:0;}
+main{flex:1;overflow-y:auto;padding:20px;background:var(--bg);}
+
+/* NAV */
+.nav-lbl{font-size:10px;color:var(--text3);letter-spacing:.1em;padding:10px 14px 4px;text-transform:uppercase;font-weight:500;}
+.nav-item{display:flex;align-items:center;gap:8px;padding:8px 14px;cursor:pointer;color:var(--text2);transition:all .15s;border-left:2px solid transparent;font-size:12px;border-radius:0;}
+.nav-item:hover{background:var(--bg3);color:var(--text);}
+.nav-item.active{background:var(--accent-light);color:var(--accent);border-left-color:var(--accent);font-weight:500;}
+.nav-dot{width:8px;height:8px;border-radius:50%;flex-shrink:0;}
+hr.ndiv{margin:8px 14px;border:none;border-top:1px solid var(--border);}
+
+/* PANEL */
+.panel{display:none;}.panel.active{display:block;}
+.page-title{font-size:18px;font-weight:700;margin-bottom:3px;color:var(--text);}
+.page-sub{font-size:12px;color:var(--text3);margin-bottom:20px;}
+
+/* CARD */
+.card{background:var(--bg2);border:1px solid var(--border);border-radius:10px;margin-bottom:14px;overflow:hidden;box-shadow:var(--shadow);}
+.card-head{padding:12px 18px;border-bottom:1px solid var(--border);display:flex;align-items:center;justify-content:space-between;gap:10px;background:var(--bg2);}
+.card-title{font-size:13px;font-weight:600;color:var(--text);}
+
+/* KPI */
+.kpi-row{display:grid;grid-template-columns:repeat(5,1fr);gap:10px;margin-bottom:18px;}
+.kpi{background:var(--bg2);border:1px solid var(--border);border-radius:10px;padding:16px;box-shadow:var(--shadow);}
+.kpi-lbl{font-size:11px;color:var(--text3);margin-bottom:6px;font-weight:500;}
+.kpi-val{font-family:'DM Mono',monospace;font-size:26px;font-weight:700;line-height:1;}
+.kpi-sub{font-size:10px;color:var(--text3);margin-top:5px;}
+
+/* MONTHLY PAGE */
+.month-ctrl{display:flex;align-items:center;gap:12px;margin-bottom:20px;background:var(--bg2);padding:14px 18px;border-radius:10px;border:1px solid var(--border);box-shadow:var(--shadow);}
+.month-ctrl label{font-size:12px;font-weight:500;color:var(--text2);}
+.month-sel{border:1px solid var(--border2);background:var(--bg2);color:var(--text);padding:6px 12px;border-radius:6px;font-size:13px;font-weight:500;font-family:'Noto Sans JP',sans-serif;outline:none;cursor:pointer;}
+.month-sel:focus{border-color:var(--accent);}
+.month-tag{font-size:12px;background:var(--accent-light);color:var(--accent);padding:4px 10px;border-radius:20px;font-weight:500;border:1px solid #bfdbfe;}
+
+/* SECTION TITLE */
+.sec-title{font-size:13px;font-weight:700;color:var(--text);margin-bottom:12px;padding-left:10px;border-left:3px solid var(--accent);}
+
+/* STAT GRID */
+.stat-grid{display:grid;gap:10px;margin-bottom:18px;}
+.stat-grid-3{grid-template-columns:repeat(3,1fr);}
+.stat-grid-4{grid-template-columns:repeat(4,1fr);}
+.stat-grid-5{grid-template-columns:repeat(5,1fr);}
+.stat-card{background:var(--bg2);border:1px solid var(--border);border-radius:10px;padding:16px;box-shadow:var(--shadow);position:relative;overflow:hidden;}
+.stat-card::before{content:'';position:absolute;top:0;left:0;right:0;height:3px;}
+.stat-card.blue::before{background:var(--accent);}
+.stat-card.green::before{background:var(--green);}
+.stat-card.yellow::before{background:var(--yellow);}
+.stat-card.red::before{background:var(--red);}
+.stat-card.purple::before{background:var(--purple);}
+.stat-card.gray::before{background:var(--gray);}
+.sc-lbl{font-size:11px;color:var(--text3);margin-bottom:8px;font-weight:500;}
+.sc-val{font-family:'DM Mono',monospace;font-size:28px;font-weight:700;line-height:1;color:var(--text);}
+.sc-sub{font-size:11px;color:var(--text3);margin-top:6px;}
+.sc-rate{font-size:14px;font-weight:700;margin-top:4px;}
+.sc-rate.good{color:var(--green);}
+.sc-rate.bad{color:var(--red);}
+.sc-rate.mid{color:var(--yellow);}
+
+/* PRODUCT ROW in monthly */
+.prod-section{background:var(--bg2);border:1px solid var(--border);border-radius:10px;margin-bottom:14px;overflow:hidden;box-shadow:var(--shadow);}
+.prod-section-head{padding:12px 18px;background:var(--bg3);border-bottom:1px solid var(--border);display:flex;align-items:center;gap:10px;}
+.prod-section-body{padding:16px 18px;}
+
+/* PERSON TABLE */
+.person-table{width:100%;border-collapse:collapse;font-size:12px;}
+.person-table th{background:var(--bg3);color:var(--text3);font-weight:500;padding:8px 12px;text-align:left;border-bottom:1px solid var(--border);font-size:11px;}
+.person-table td{padding:8px 12px;border-bottom:1px solid var(--border);color:var(--text2);}
+.person-table tr:last-child td{border-bottom:none;}
+.person-table tr:hover td{background:var(--bg3);}
+.person-table .num{font-family:'DM Mono',monospace;text-align:right;font-size:12px;}
+.rank-1{color:var(--accent);font-weight:700;}
+.rank-2{color:var(--green);font-weight:600;}
+.rank-3{color:var(--yellow);font-weight:600;}
+
+/* MINI CHART */
+.mini-chart{display:flex;align-items:flex-end;gap:3px;height:40px;margin-top:8px;}
+.mini-bar{flex:1;border-radius:2px 2px 0 0;min-height:3px;transition:height .4s ease;}
+
+/* PROGRESS BAR */
+.prog-wrap{margin-top:6px;}
+.prog-track{height:6px;background:var(--bg3);border-radius:3px;overflow:hidden;border:1px solid var(--border);}
+.prog-fill{height:100%;border-radius:3px;transition:width .5s ease;}
+
+/* FILTER BAR */
+.filter-bar{display:flex;gap:7px;align-items:center;padding:10px 16px;border-bottom:1px solid var(--border);flex-wrap:wrap;background:var(--bg3);}
+.fs,.fi{background:var(--bg2);border:1px solid var(--border2);color:var(--text);padding:5px 9px;border-radius:6px;font-size:12px;font-family:'Noto Sans JP',sans-serif;outline:none;}
+.fs:focus,.fi:focus{border-color:var(--accent);}
+.fi{width:170px;}
+.fl{font-size:11px;color:var(--text2);font-weight:500;}
+.rc{font-family:'DM Mono',monospace;font-size:11px;color:var(--text3);margin-left:auto;}
+.rc span{color:var(--accent);font-weight:600;}
+
+/* TABLE */
+.tbl-wrap{overflow-x:auto;}
+table.main-tbl{width:100%;border-collapse:collapse;font-size:12px;}
+table.main-tbl thead th{background:var(--bg3);color:var(--text3);font-weight:500;padding:9px 12px;text-align:left;border-bottom:1px solid var(--border);white-space:nowrap;font-size:11px;}
+table.main-tbl tbody tr{border-bottom:1px solid var(--border);cursor:pointer;transition:background .1s;}
+table.main-tbl tbody tr:hover{background:var(--bg3);}
+table.main-tbl tbody td{padding:9px 12px;color:var(--text2);white-space:nowrap;max-width:160px;overflow:hidden;text-overflow:ellipsis;}
+table.main-tbl tbody td.mono{font-family:'DM Mono',monospace;font-size:11px;color:var(--text3);}
+
+/* STATUS BADGE */
+.st{display:inline-block;padding:2px 8px;border-radius:4px;font-size:11px;font-weight:500;white-space:nowrap;}
+.st-blue{background:#eff6ff;color:#1d4ed8;border:1px solid #bfdbfe;}
+.st-yellow{background:#fffbeb;color:#b45309;border:1px solid #fde68a;}
+.st-green{background:#f0fdf4;color:#15803d;border:1px solid #bbf7d0;}
+.st-red{background:#fef2f2;color:#b91c1c;border:1px solid #fecaca;}
+.st-gray{background:#f9fafb;color:#6b7280;border:1px solid #e5e7eb;}
+.st-purple{background:#f5f3ff;color:#6d28d9;border:1px solid #ddd6fe;}
+
+/* DRAWER */
+.drawer{position:fixed;right:0;top:52px;width:500px;height:calc(100vh - 52px);background:var(--bg2);border-left:1px solid var(--border2);z-index:150;overflow-y:auto;transform:translateX(100%);transition:transform .22s ease;padding:22px;box-shadow:-4px 0 20px rgba(0,0,0,.1);}
+.drawer.open{transform:translateX(0);}
+.drawer-x{position:absolute;top:18px;right:18px;cursor:pointer;color:var(--text3);font-size:16px;width:28px;height:28px;display:flex;align-items:center;justify-content:center;border-radius:6px;}
+.drawer-x:hover{background:var(--bg3);color:var(--text);}
+.d-title{font-size:15px;font-weight:700;margin-bottom:3px;padding-right:32px;}
+.d-sub{font-size:11px;color:var(--text3);margin-bottom:18px;}
+.d-sec{margin-bottom:18px;}
+.d-sec-ttl{font-size:10px;font-weight:600;color:var(--text3);letter-spacing:.1em;text-transform:uppercase;margin-bottom:8px;padding-bottom:5px;border-bottom:1px solid var(--border);}
+.d-grid{display:grid;grid-template-columns:1fr 1fr;gap:8px;}
+.d-field{background:var(--bg3);border-radius:6px;padding:9px;border:1px solid var(--border);}
+.d-field.full{grid-column:1/-1;}
+.dfl{font-size:10px;color:var(--text3);margin-bottom:3px;font-weight:500;}
+.dfv{font-size:12px;color:var(--text);word-break:break-all;line-height:1.4;}
+.dfv.mono{font-family:'DM Mono',monospace;}
+.dfv.empty{color:var(--text3);font-style:italic;}
+.dfv.bikou{font-size:11px;color:var(--text2);white-space:pre-wrap;max-height:80px;overflow-y:auto;}
+
+/* BUTTONS */
+.btn{display:inline-flex;align-items:center;gap:5px;padding:6px 13px;border-radius:6px;font-size:12px;font-weight:500;cursor:pointer;border:none;transition:all .15s;font-family:'Noto Sans JP',sans-serif;}
+.btn-primary{background:var(--accent);color:white;box-shadow:0 1px 3px rgba(37,99,235,.3);}
+.btn-primary:hover{background:var(--accent2);}
+.btn-ghost{background:transparent;color:var(--text2);border:1px solid var(--border2);}
+.btn-ghost:hover{background:var(--bg3);}
+.btn-ok{background:var(--green-bg);color:var(--green);border:1px solid var(--green-border);}
+
+/* IMPORT BOX */
+.import-box{border:2px dashed var(--border2);border-radius:10px;padding:32px 20px;text-align:center;cursor:pointer;transition:all .2s;margin:16px;background:var(--bg3);}
+.import-box:hover,.import-box.over{border-color:var(--accent);background:var(--accent-light);}
+.ib-icon{font-size:28px;margin-bottom:10px;opacity:.6;}
+.ib-main{font-size:13px;font-weight:600;color:var(--text2);margin-bottom:5px;}
+.ib-sub{font-size:11px;color:var(--text3);}
+input[type=file]{display:none;}
+
+/* MODAL */
+.modal-wrap{position:fixed;inset:0;background:rgba(0,0,0,.5);z-index:200;display:flex;align-items:center;justify-content:center;}
+.modal-wrap.hidden{display:none;}
+.modal{background:var(--bg2);border:1px solid var(--border);border-radius:12px;padding:28px;width:420px;max-width:95vw;box-shadow:var(--shadow-md);}
+.modal-title{font-size:15px;font-weight:700;margin-bottom:5px;}
+.modal-sub{font-size:12px;color:var(--text3);margin-bottom:20px;}
+.prod-sel-grid{display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-bottom:18px;}
+.psel{border:1px solid var(--border2);border-radius:8px;padding:14px;cursor:pointer;text-align:center;transition:all .15s;background:var(--bg3);}
+.psel:hover{border-color:var(--border2);background:var(--bg4);}
+.psel.sel{border-color:var(--accent);background:var(--accent-light);}
+.psel-name{font-size:12px;font-weight:600;color:var(--text);}
+
+/* CHART BAR */
+.chart-grid{display:grid;grid-template-columns:1fr 1fr;gap:12px;margin-bottom:16px;}
+.chart-box{background:var(--bg2);border:1px solid var(--border);border-radius:10px;padding:18px;box-shadow:var(--shadow);}
+.chart-ttl{font-size:12px;font-weight:600;color:var(--text2);margin-bottom:14px;}
+.bar-row{display:flex;align-items:center;gap:8px;margin-bottom:8px;}
+.bar-lbl{width:130px;font-size:11px;color:var(--text2);text-align:right;flex-shrink:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;}
+.bar-track{flex:1;height:6px;background:var(--bg3);border-radius:3px;overflow:hidden;border:1px solid var(--border);}
+.bar-fill{height:100%;border-radius:3px;transition:width .5s ease;}
+.bar-cnt{width:34px;font-family:'DM Mono',monospace;font-size:11px;color:var(--text3);text-align:right;}
+
+/* PAGINATION */
+.pagination{display:flex;align-items:center;gap:3px;padding:10px 16px;border-top:1px solid var(--border);justify-content:flex-end;}
+.pb{width:28px;height:28px;display:flex;align-items:center;justify-content:center;border-radius:5px;cursor:pointer;font-size:12px;color:var(--text3);border:1px solid transparent;transition:all .12s;font-family:'DM Mono',monospace;}
+.pb:hover{background:var(--bg3);color:var(--text);}
+.pb.active{background:var(--accent);color:white;border-color:var(--accent);}
+
+/* MASTER */
+.master-row{display:flex;align-items:center;gap:10px;padding:9px 16px;border-bottom:1px solid var(--border);font-size:12px;}
+.master-row:last-child{border-bottom:none;}
+.m-num{font-family:'DM Mono',monospace;font-size:11px;color:var(--text3);width:24px;text-align:right;}
+.m-name{flex:1;color:var(--text);}
+.m-tag{font-size:10px;padding:2px 6px;border-radius:3px;}
+.m-common{background:var(--green-bg);color:var(--green);border:1px solid var(--green-border);}
+.m-extra{background:var(--accent-light);color:var(--accent);border:1px solid #bfdbfe;}
+
+/* PRODUCT CARDS */
+.product-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(200px,1fr));gap:12px;margin-bottom:18px;}
+.product-card{background:var(--bg2);border:2px solid var(--border);border-radius:10px;padding:18px;cursor:pointer;transition:all .18s;box-shadow:var(--shadow);}
+.product-card:hover{box-shadow:var(--shadow-md);border-color:var(--border2);}
+.pc-name{font-size:14px;font-weight:700;margin-bottom:4px;display:flex;align-items:center;gap:6px;}
+.pc-count{font-family:'DM Mono',monospace;font-size:24px;font-weight:700;color:var(--accent);}
+.pc-sub{font-size:11px;color:var(--text3);margin-top:4px;}
+
+/* EMPTY */
+.empty{text-align:center;padding:50px 20px;color:var(--text3);}
+.empty-icon{font-size:32px;margin-bottom:10px;opacity:.4;}
+
+/* TOAST */
+.toast{position:fixed;bottom:20px;right:20px;background:var(--bg2);border:1px solid var(--border2);border-radius:8px;padding:11px 18px;font-size:13px;z-index:9999;opacity:0;transform:translateY(6px);transition:all .25s;pointer-events:none;box-shadow:var(--shadow-md);}
+.toast.show{opacity:1;transform:translateY(0);}
+.toast.ok{border-color:var(--green-border);color:var(--green);}
+.toast.err{border-color:var(--red-border);color:var(--red);}
+
+::-webkit-scrollbar{width:5px;height:5px;}
+::-webkit-scrollbar-track{background:var(--bg);}
+::-webkit-scrollbar-thumb{background:var(--border2);border-radius:3px;}
+</style>
+</head>
+<body>
+
+<div class="modal-wrap hidden" id="import-modal">
+  <div class="modal">
+    <div class="modal-title">商材を選択</div>
+    <div class="modal-sub">インポートするCSVの商材を選択してください</div>
+    <div class="prod-sel-grid" id="prod-sel-grid"></div>
+    <div style="font-size:11px;color:var(--text3);margin-bottom:14px;">選択中: <span id="modal-sel-name" style="color:var(--accent);font-weight:600">未選択</span></div>
+    <div style="display:flex;gap:8px;">
+      <button class="btn btn-ghost" style="flex:1;justify-content:center;" onclick="closeImportModal()">キャンセル</button>
+      <button class="btn btn-primary" style="flex:2;justify-content:center;" id="modal-ok" disabled onclick="doImport()">インポート実行</button>
+    </div>
+  </div>
+</div>
+
+<header>
+  <div class="logo">ISP<em>/</em>CRM <em style="font-size:11px;margin-left:8px;color:var(--text3);">代理店管理システム v4</em></div>
+  <div class="hdr-r">
+    <div class="hdr-badge" id="total-badge">商材 0 / 件数 0</div>
+    <button class="btn btn-primary" onclick="triggerImport()">＋ CSVインポート</button>
+    <input type="file" id="csv-input" accept=".csv" onchange="onFileSelect(this)">
+  </div>
+</header>
+
+<div class="layout">
+<aside>
+  <div class="nav-lbl">概要</div>
+  <div class="nav-item active" onclick="nav('dashboard',this)">📊 ダッシュボード</div>
+  <div class="nav-item" onclick="nav('all',this)">📋 全商材一覧</div>
+  <hr class="ndiv">
+  <div class="nav-lbl">集計</div>
+  <div class="nav-item" onclick="nav('monthly',this)">📅 月次集計</div>
+  <hr class="ndiv">
+  <div class="nav-lbl">商材別</div>
+  <div id="product-nav"></div>
+  <hr class="ndiv">
+  <div class="nav-lbl">設定</div>
+  <div class="nav-item" onclick="nav('master',this)">⚙ 商材マスタ</div>
+  <div class="nav-item" onclick="clearAll()">🗑 全データ削除</div>
+</aside>
+
+<main>
+
+<!-- DASHBOARD -->
+<div class="panel active" id="panel-dashboard">
+  <div class="page-title">ダッシュボード</div>
+  <div class="page-sub" id="dash-sub">CSVをインポートすると集計が表示されます</div>
+  <div class="kpi-row">
+    <div class="kpi"><div class="kpi-lbl">総件数（全商材）</div><div class="kpi-val" style="color:var(--accent)" id="k-total">0</div><div class="kpi-sub">件</div></div>
+    <div class="kpi"><div class="kpi-lbl">工事日調整中</div><div class="kpi-val" style="color:var(--yellow)" id="k-chusei">0</div><div class="kpi-sub">対応中</div></div>
+    <div class="kpi"><div class="kpi-lbl">完了（開通）</div><div class="kpi-val" style="color:var(--green)" id="k-done">0</div><div class="kpi-sub">開通・サービス開始</div></div>
+    <div class="kpi"><div class="kpi-lbl">不出 / NG</div><div class="kpi-val" style="color:var(--red)" id="k-ng">0</div><div class="kpi-sub">要対応</div></div>
+    <div class="kpi"><div class="kpi-lbl">キャンセル</div><div class="kpi-val" style="color:var(--gray)" id="k-cancel">0</div><div class="kpi-sub">終了</div></div>
+  </div>
+  <div class="chart-grid">
+    <div class="chart-box"><div class="chart-ttl">商材別 件数</div><div id="ch-product"><div class="empty"><div class="empty-icon">📦</div>データなし</div></div></div>
+    <div class="chart-box"><div class="chart-ttl">ステータス別 内訳（全体）</div><div id="ch-status"><div class="empty"><div class="empty-icon">📊</div>データなし</div></div></div>
+  </div>
+  <div class="card">
+    <div class="card-head"><div class="card-title">CSVインポート</div></div>
+    <div class="import-box" id="drop-zone" ondragover="event.preventDefault();this.classList.add('over')" ondragleave="this.classList.remove('over')" ondrop="onDrop(event)" onclick="triggerImport()">
+      <div class="ib-icon">📂</div>
+      <div class="ib-main">lph-cms から出力したCSVをドロップ</div>
+      <div class="ib-sub">複数商材のCSVを順番にインポートできます</div>
+    </div>
+  </div>
+</div>
+
+<!-- 全商材一覧 -->
+<div class="panel" id="panel-all">
+  <div class="page-title">全商材一覧</div>
+  <div class="page-sub">共通項目のみを表示。行クリックで詳細確認</div>
+  <div class="card">
+    <div class="filter-bar">
+      <span class="fl">商材</span><select class="fs" id="fa-prod" onchange="applyAllFilter()"><option value="">すべて</option></select>
+      <span class="fl">ステータス</span><select class="fs" id="fa-status" onchange="applyAllFilter()"><option value="">すべて</option></select>
+      <span class="fl">代理店</span><select class="fs" id="fa-agency" onchange="applyAllFilter()"><option value="">すべて</option></select>
+      <input class="fi" id="fa-search" placeholder="顧客名・電話・申込番号..." oninput="applyAllFilter()">
+      <button class="btn btn-ghost" onclick="resetAllFilter()">リセット</button>
+      <button class="btn btn-ok" onclick="exportAll()">CSV出力</button>
+      <div class="rc">表示: <span id="all-count">0</span> 件</div>
+    </div>
+    <div class="tbl-wrap">
+      <table class="main-tbl">
+        <thead><tr><th>商材</th><th>No.</th><th>代理店名</th><th>申込日</th><th>営業担当</th><th>顧客名</th><th>電話番号</th><th>申込区分</th><th>アトカクステータス</th><th>工事予定日</th><th>完了日</th></tr></thead>
+        <tbody id="all-body"><tr><td colspan="11"><div class="empty"><div class="empty-icon">📋</div>CSVをインポートしてください</div></td></tr></tbody>
+      </table>
+    </div>
+    <div class="pagination" id="all-page"></div>
+  </div>
+</div>
+
+<!-- 月次集計 -->
+<div class="panel" id="panel-monthly">
+  <div class="page-title">月次集計</div>
+  <div class="page-sub">申込日ベース・開通日ベースで月の状況を確認</div>
+
+  <div class="month-ctrl">
+    <label>集計月（N月）：</label>
+    <select class="month-sel" id="month-sel" onchange="renderMonthly()"><option value="">選択してください</option></select>
+    <span class="month-tag" id="month-label">—</span>
+    <span style="font-size:11px;color:var(--text3);margin-left:8px;">申込日ベース・開通日ベースの両方を表示</span>
+  </div>
+
+  <div id="monthly-body"><div class="empty"><div class="empty-icon">📅</div>月を選択してください</div></div>
+</div>
+
+<!-- 商材別パネル -->
+<div id="product-panels"></div>
+
+<!-- 商材マスタ -->
+<div class="panel" id="panel-master">
+  <div class="page-title">商材マスタ管理</div>
+  <div class="page-sub">インポート済み商材の項目一覧</div>
+  <div class="product-grid" id="master-product-cards"></div>
+  <div class="card" id="master-detail-card" style="display:none;">
+    <div class="card-head">
+      <div class="card-title" id="master-detail-title">項目一覧</div>
+      <button class="btn btn-ghost" onclick="document.getElementById('master-detail-card').style.display='none'">閉じる</button>
+    </div>
+    <div id="master-detail-body"></div>
+  </div>
+</div>
+
+</main>
+</div>
+
+<div class="drawer" id="drawer">
+  <div class="drawer-x" onclick="closeDrawer()">✕</div>
+  <div class="d-title" id="d-name">—</div>
+  <div class="d-sub" id="d-sub2">—</div>
+  <div id="drawer-body"></div>
+</div>
+
+<div class="toast" id="toast"></div>
+
+<script>
+// ===== CONSTANTS =====
+const PCOLORS={'SoftBank光':'#2563eb','BIGLOBE光':'#d97706','Nifty光':'#16a34a','つながる光':'#7c3aed','SoftBank Air':'#0891b2','でんき':'#ea580c','その他':'#6b7280'};
+const COMMON_MAP={id:['ID'],agency:['代理店名'],date:['申込日'],staff:['営業担当'],apo:['アポ担当'],kubun:['申込区分','申込種別'],atocak:['アトカクステータス'],kojiDate:['工事予定日'],kanryo:['工事完了日','開通日','ISP開通日'],kaiyaku:['解約成立日','解約日'],shiharai:['支払方法登録日','つながる光決済登録日時'],cancel:['キャンセル日','キャンセル受付日'],bikou:['備考欄','備考'],update:['最終更新']};
+const PROD_EXTRA={'SoftBank光':['クルーコード','回線タイプ','転用番号事業間変更番号','派遣工事','工事時間','初回認証日','支払方法登録日','本確ステータス','NG管理ステータス'],'BIGLOBE光':['回線タイプ','契約年数','光電話','au携帯割引案内','au携帯番号','1stステータス','2ndステータス','開通日','決済方法'],'Nifty光':['申込者氏名 名(漢字)','回線タイプ','建物種別','auスマートバリュー有無','au携帯番号','対応結果（大区分）','対応結果（小区分）','確認完了日','開通日','支払状況'],'つながる光':['法人名（漢字）','申込種別','申込プラン','申込プラン詳細','つながる光決済登録日時','つながる光契約番号','ISP開通日']};
+
+// ===== STATE =====
+let DB={}, allRows=[], filteredAll=[], currentAllPage=1;
+let filteredProd={}, currentProdPage={};
+let pendingFile=null, modalSelProd='';
+const PAGE=50;
+
+// ===== HELPERS =====
+const esc=s=>s.replace(/[^a-zA-Z0-9]/g,'_');
+const gv=id=>document.getElementById(id)?.value||'';
+const resolve=(obj,keys)=>{ for(const k of keys){ if(obj[k]) return obj[k]; } return ''; };
+const ym=d=>{ if(!d) return ''; const m=d.match(/(\d{4})[\/\-](\d{1,2})/); return m?`${m[1]}-${m[2].padStart(2,'0')}`:d.slice(0,7); };
+const monthAdd=(ym,n)=>{ const [y,m]=ym.split('-').map(Number); const d=new Date(y,m-1+n,1); return `${d.getFullYear()}-${String(d.getMonth()+1).padStart(2,'0')}`; };
+const pct=(n,d)=>d?((n/d)*100).toFixed(1)+'%':'—';
+const colors8=['#2563eb','#d97706','#16a34a','#dc2626','#7c3aed','#0891b2','#ea580c','#6b7280'];
+
+// ===== NAV =====
+function nav(name,el){
+  document.querySelectorAll('.panel').forEach(p=>p.classList.remove('active'));
+  document.querySelectorAll('.nav-item').forEach(n=>n.classList.remove('active'));
+  const p=document.getElementById('panel-'+name);
+  if(p) p.classList.add('active');
+  if(el) el.classList.add('active');
+  closeDrawer();
+}
+
+// ===== IMPORT =====
+function triggerImport(){ document.getElementById('csv-input').click(); }
+function onFileSelect(input){ const f=input.files[0]; if(f){ input.value=''; openImportModal(f); } }
+function onDrop(e){ e.preventDefault(); document.getElementById('drop-zone').classList.remove('over'); const f=e.dataTransfer.files[0]; if(f) openImportModal(f); }
+
+function openImportModal(file){
+  pendingFile=file; modalSelProd='';
+  document.getElementById('modal-sel-name').textContent='未選択';
+  document.getElementById('modal-ok').disabled=true;
+  const grid=document.getElementById('prod-sel-grid');
+  grid.innerHTML=Object.keys(PCOLORS).map(p=>`<div class="psel" onclick="selProd('${p}')" id="psel_${esc(p)}"><div class="psel-name" style="color:${PCOLORS[p]}">${p}</div></div>`).join('');
+  document.getElementById('import-modal').classList.remove('hidden');
+}
+function selProd(p){ modalSelProd=p; document.querySelectorAll('.psel').forEach(e=>e.classList.remove('sel')); document.getElementById('psel_'+esc(p))?.classList.add('sel'); document.getElementById('modal-sel-name').textContent=p; document.getElementById('modal-ok').disabled=false; }
+function closeImportModal(){ document.getElementById('import-modal').classList.add('hidden'); pendingFile=null; }
+function doImport(){ if(!pendingFile||!modalSelProd) return; document.getElementById('import-modal').classList.add('hidden'); readCSV(pendingFile,modalSelProd); pendingFile=null; }
+
+function readCSV(file,prod){
+  const r=new FileReader();
+  r.onload=e=>{ let t=e.target.result; if(t.charCodeAt(0)===0xFEFF) t=t.slice(1); processCSV(t,prod); };
+  r.readAsText(file,'UTF-8');
+}
+
+function processCSV(text,prod){
+  const lines=text.split('\n').filter(l=>l.trim());
+  if(lines.length<2){ showToast('CSVの形式が不正です','err'); return; }
+  const headers=parseCSVLine(lines[0]);
+  const rows=[];
+  for(let i=1;i<lines.length;i++){
+    const cols=parseCSVLine(lines[i]);
+    if(cols.length<3) continue;
+    const obj={_product:prod,_idx:allRows.length+rows.length};
+    headers.forEach((h,j)=>{ obj[h]=(cols[j]||'').trim(); });
+    // 共通フィールド
+    obj._id=resolve(obj,COMMON_MAP.id);
+    obj._agency=resolve(obj,COMMON_MAP.agency);
+    obj._date=resolve(obj,COMMON_MAP.date);
+    obj._staff=resolve(obj,COMMON_MAP.staff);
+    obj._apo=resolve(obj,COMMON_MAP.apo);
+    const nF=resolve(obj,['申込者氏名 姓(漢字)']); const nL=resolve(obj,['申込者氏名 名(漢字)']);
+    obj._name=resolve(obj,['ご契約者名（漢字）'])||(nF?nF+(nL?' '+nL:''):'');
+    obj._phone=resolve(obj,['連絡先①']);
+    obj._kubun=resolve(obj,COMMON_MAP.kubun);
+    obj._atocak=resolve(obj,COMMON_MAP.atocak);
+    // 工事予定日：重複列対応
+    obj._kojiDate=headers.filter(h=>h==='工事予定日').map(h=>obj[h]).find(v=>v)||'';
+    obj._kanryo=resolve(obj,COMMON_MAP.kanryo);
+    obj._kaiyaku=resolve(obj,COMMON_MAP.kaiyaku);
+    obj._shiharai=resolve(obj,COMMON_MAP.shiharai);
+    obj._cancel=resolve(obj,COMMON_MAP.cancel)||( (obj._atocak||'').includes('キャンセル')? obj._date:'');
+    obj._bikou=resolve(obj,COMMON_MAP.bikou);
+    obj._update=resolve(obj,COMMON_MAP.update);
+    // 月キー
+    obj._ym_date=ym(obj._date);
+    obj._ym_kanryo=ym(obj._kanryo);
+    obj._ym_shiharai=ym(obj._shiharai);
+    obj._ym_kaiyaku=ym(obj._kaiyaku);
+    rows.push(obj);
+  }
+  if(!DB[prod]) DB[prod]={headers,rows:[]};
+  else if(DB[prod].headers.length<headers.length) DB[prod].headers=headers;
+  DB[prod].rows.push(...rows);
+  allRows.push(...rows);
+  rebuildAll();
+  showToast(`✓ ${prod} / ${rows.length.toLocaleString()} 件インポート完了`,'ok');
+}
+
+function parseCSVLine(line){
+  const r=[]; let cur='',inQ=false;
+  for(let i=0;i<line.length;i++){
+    const c=line[i];
+    if(c==='"'){ if(inQ&&line[i+1]==='"'){cur+='"';i++;}else inQ=!inQ; }
+    else if(c===','&&!inQ){ r.push(cur); cur=''; }
+    else cur+=c;
+  }
+  r.push(cur); return r;
+}
+
+// ===== REBUILD =====
+function rebuildAll(){
+  updateBadge(); updateDashboard(); buildProdNav(); buildProdPanels();
+  buildAllFilters(); filteredAll=[...allRows]; currentAllPage=1; renderAllTable();
+  buildMaster(); buildMonthSel();
+}
+
+function updateBadge(){
+  document.getElementById('total-badge').textContent=`商材 ${Object.keys(DB).length} / ${allRows.length.toLocaleString()} 件`;
+  document.getElementById('dash-sub').textContent=`${Object.keys(DB).length} 商材 / 合計 ${allRows.length.toLocaleString()} 件のデータを管理中`;
+}
+
+// ===== DASHBOARD =====
+function updateDashboard(){
+  document.getElementById('k-total').textContent=allRows.length.toLocaleString();
+  document.getElementById('k-chusei').textContent=allRows.filter(r=>r._atocak.includes('工事日調整')).length.toLocaleString();
+  document.getElementById('k-done').textContent=allRows.filter(r=>r._kanryo).length.toLocaleString();
+  document.getElementById('k-ng').textContent=allRows.filter(r=>r._atocak.includes('不出')).length.toLocaleString();
+  document.getElementById('k-cancel').textContent=allRows.filter(r=>r._atocak.includes('キャンセル')).length.toLocaleString();
+
+  const pmap={}, smap={};
+  allRows.forEach(r=>{ pmap[r._product]=(pmap[r._product]||0)+1; const s=r._atocak||'不明'; smap[s]=(smap[s]||0)+1; });
+  const ps=Object.entries(pmap).sort((a,b)=>b[1]-a[1]);
+  const maxP=ps[0]?.[1]||1;
+  document.getElementById('ch-product').innerHTML=ps.map(([p,c])=>`<div class="bar-row"><div class="bar-lbl">${p}</div><div class="bar-track"><div class="bar-fill" style="width:${(c/maxP*100).toFixed(1)}%;background:${PCOLORS[p]||'#6b7280'}"></div></div><div class="bar-cnt">${c}</div></div>`).join('')||'<div class="empty"><div class="empty-icon">📦</div>データなし</div>';
+  const ss=Object.entries(smap).sort((a,b)=>b[1]-a[1]).slice(0,8);
+  const maxS=ss[0]?.[1]||1;
+  document.getElementById('ch-status').innerHTML=ss.map(([s,c],i)=>`<div class="bar-row"><div class="bar-lbl">${s}</div><div class="bar-track"><div class="bar-fill" style="width:${(c/maxS*100).toFixed(1)}%;background:${colors8[i%8]}"></div></div><div class="bar-cnt">${c}</div></div>`).join('')||'<div class="empty"><div class="empty-icon">📊</div>データなし</div>';
+}
+
+// ===== MONTH SELECTOR =====
+function buildMonthSel(){
+  const months=[...new Set(allRows.map(r=>r._ym_date).filter(Boolean))].sort().reverse();
+  const sel=document.getElementById('month-sel');
+  const cur=sel.value;
+  sel.innerHTML='<option value="">選択してください</option>'+months.map(m=>`<option value="${m}"${m===cur?' selected':''}>${m.replace('-','年')}月</option>`).join('');
+  if(!cur && months.length) sel.value=months[0];
+  renderMonthly();
+}
+
+// ===== MONTHLY =====
+function renderMonthly(){
+  const N=document.getElementById('month-sel').value;
+  if(!N){ document.getElementById('monthly-body').innerHTML='<div class="empty"><div class="empty-icon">📅</div>月を選択してください</div>'; document.getElementById('month-label').textContent='—'; return; }
+  const [ny,nm]=N.split('-');
+  document.getElementById('month-label').textContent=`${ny}年${parseInt(nm)}月（N月）`;
+  const N1=monthAdd(N,1), N2=monthAdd(N,2);
+
+  // N月申込
+  const base=allRows.filter(r=>r._ym_date===N);
+  const total=base.length;
+
+  // 工事予定（各月の申込ベースで工事予定日が何月か）
+  const kojiN=base.filter(r=>r._kojiDate&&ym(r._kojiDate)===N).length;
+  const kojiN1=base.filter(r=>r._kojiDate&&ym(r._kojiDate)===N1).length;
+  const kojiN2=base.filter(r=>r._kojiDate&&ym(r._kojiDate)===N2).length;
+  const kojiUnset=base.filter(r=>!r._kojiDate&&!r._atocak.includes('キャンセル')).length;
+
+  // 工事完了
+  const done=base.filter(r=>r._kanryo).length;
+  const doneRate=pct(done,total);
+
+  // キャンセル
+  const cancelled=base.filter(r=>r._atocak.includes('キャンセル')||r._cancel).length;
+  const cancelRate=pct(cancelled,total);
+
+  // 不出
+  const ng=base.filter(r=>r._atocak.includes('不出')).length;
+
+  // 工事完了：営業別
+  const staffDone={};
+  base.filter(r=>r._kanryo).forEach(r=>{ const s=r._staff||'未設定'; staffDone[s]=(staffDone[s]||0)+1; });
+  const staffDoneSorted=Object.entries(staffDone).sort((a,b)=>b[1]-a[1]);
+
+  // 工事完了：アポ別
+  const apoDone={};
+  base.filter(r=>r._kanryo).forEach(r=>{ const a=r._apo||'未設定'; apoDone[a]=(apoDone[a]||0)+1; });
+  const apoDoneSorted=Object.entries(apoDone).sort((a,b)=>b[1]-a[1]);
+
+  // キャンセル：営業別
+  const staffCancel={};
+  base.filter(r=>r._atocak.includes('キャンセル')||r._cancel).forEach(r=>{ const s=r._staff||'未設定'; staffCancel[s]=(staffCancel[s]||0)+1; });
+  const staffCancelSorted=Object.entries(staffCancel).sort((a,b)=>b[1]-a[1]);
+
+  // 商材別内訳（申込日ベース）
+  const prodMap={};
+  base.forEach(r=>{ if(!prodMap[r._product]) prodMap[r._product]={total:0,done:0,cancel:0,koji:0,ng:0}; const m=prodMap[r._product]; m.total++; if(r._kanryo) m.done++; if(r._atocak.includes('キャンセル')||r._cancel) m.cancel++; if(r._kojiDate) m.koji++; if(r._atocak.includes('不出')) m.ng++; });
+
+  // ===== 開通日ベース =====
+  const baseKanryo=allRows.filter(r=>r._ym_kanryo===N);
+  const kanryoTotal=baseKanryo.length;
+  const kaiyakuTotal=allRows.filter(r=>r._ym_kaiyaku===N).length;
+  const shiharaiTotal=allRows.filter(r=>r._ym_shiharai===N).length;
+  const shiharaiRate=pct(shiharaiTotal,kanryoTotal);
+
+  // 開通月の前月申込（どの月の申込が開通したか）
+  const kanryoByApply={};
+  baseKanryo.forEach(r=>{ const ym=r._ym_date||'不明'; kanryoByApply[ym]=(kanryoByApply[ym]||0)+1; });
+  const kanryoByApplySorted=Object.entries(kanryoByApply).sort((a,b)=>b[1]-a[1]).slice(0,5);
+
+  // 商材別 開通日ベース
+  const kanryoProd={};
+  baseKanryo.forEach(r=>{ kanryoProd[r._product]=(kanryoProd[r._product]||0)+1; });
+
+  const rateColor=r=>{ const n=parseFloat(r); if(n>=70) return 'good'; if(n>=40) return 'mid'; return 'bad'; };
+
+  document.getElementById('monthly-body').innerHTML=`
+  <!-- ===== 申込日ベース ===== -->
+  <div class="sec-title">申込日ベース（N月 = ${ny}年${parseInt(nm)}月の申込）</div>
+
+  <div class="stat-grid stat-grid-5" style="margin-bottom:18px;">
+    <div class="stat-card blue"><div class="sc-lbl">N月 申込件数</div><div class="sc-val">${total.toLocaleString()}</div><div class="sc-sub">全商材合計</div></div>
+    <div class="stat-card yellow"><div class="sc-lbl">工事予定（N月）</div><div class="sc-val">${kojiN}</div><div class="sc-sub">${N.replace('-','年')}月に工事予定</div></div>
+    <div class="stat-card yellow"><div class="sc-lbl">工事予定（N+1月）</div><div class="sc-val">${kojiN1}</div><div class="sc-sub">${N1.replace('-','年')}月に工事予定</div></div>
+    <div class="stat-card yellow"><div class="sc-lbl">工事予定（N+2月）</div><div class="sc-val">${kojiN2}</div><div class="sc-sub">${N2.replace('-','年')}月に工事予定</div></div>
+    <div class="stat-card gray"><div class="sc-lbl">工事日未定</div><div class="sc-val">${kojiUnset}</div><div class="sc-sub">未キャンセル・工事日なし</div></div>
+  </div>
+
+  <div class="stat-grid stat-grid-4" style="margin-bottom:18px;">
+    <div class="stat-card green"><div class="sc-lbl">工事完了数（全体）</div><div class="sc-val">${done}</div><div class="sc-sub sc-rate ${rateColor(doneRate)}">完了率 ${doneRate}</div><div class="prog-wrap"><div class="prog-track"><div class="prog-fill" style="width:${pct(done,total)};background:var(--green)"></div></div></div></div>
+    <div class="stat-card red"><div class="sc-lbl">キャンセル数（全体）</div><div class="sc-val">${cancelled}</div><div class="sc-sub sc-rate ${rateColor(100-parseFloat(cancelRate))||'mid'}">キャンセル率 ${cancelRate}</div><div class="prog-wrap"><div class="prog-track"><div class="prog-fill" style="width:${pct(cancelled,total)};background:var(--red)"></div></div></div></div>
+    <div class="stat-card red"><div class="sc-lbl">不出件数（全体）</div><div class="sc-val">${ng}</div><div class="sc-sub">不出率 ${pct(ng,total)}</div></div>
+    <div class="stat-card blue"><div class="sc-lbl">工事日設定済み</div><div class="sc-val">${base.filter(r=>r._kojiDate).length}</div><div class="sc-sub">設定率 ${pct(base.filter(r=>r._kojiDate).length,total)}</div></div>
+  </div>
+
+  <!-- 商材別内訳 -->
+  <div class="sec-title" style="margin-bottom:12px;">商材別ステータス内訳（申込日ベース）</div>
+  <div class="card" style="margin-bottom:18px;">
+    <div class="tbl-wrap">
+      <table class="main-tbl">
+        <thead><tr><th>商材</th><th>申込件数</th><th>工事日設定</th><th>工事完了</th><th>完了率</th><th>キャンセル</th><th>キャンセル率</th><th>不出</th></tr></thead>
+        <tbody>${Object.entries(prodMap).map(([p,m])=>`<tr>
+          <td><span style="display:inline-block;width:8px;height:8px;border-radius:50%;background:${PCOLORS[p]||'#6b7280'};margin-right:6px;"></span>${p}</td>
+          <td class="num">${m.total}</td><td class="num">${m.koji}</td><td class="num">${m.done}</td>
+          <td><span class="st ${m.total&&(m.done/m.total)>=.6?'st-green':(m.done/m.total)>=.3?'st-yellow':'st-red'}">${pct(m.done,m.total)}</span></td>
+          <td class="num">${m.cancel}</td>
+          <td><span class="st ${m.total&&(m.cancel/m.total)<=.1?'st-green':(m.cancel/m.total)<=.2?'st-yellow':'st-red'}">${pct(m.cancel,m.total)}</span></td>
+          <td class="num">${m.ng}</td>
+        </tr>`).join('')||'<tr><td colspan="8" class="empty">データなし</td></tr>'}</tbody>
+      </table>
+    </div>
+  </div>
+
+  <!-- 担当者別 -->
+  <div style="display:grid;grid-template-columns:1fr 1fr;gap:14px;margin-bottom:18px;">
+    <div class="card">
+      <div class="card-head"><div class="card-title">工事完了：営業担当別</div></div>
+      <div class="tbl-wrap"><table class="person-table">
+        <thead><tr><th>順位</th><th>営業担当</th><th class="num">完了数</th><th class="num">申込数</th><th class="num">完了率</th></tr></thead>
+        <tbody>${staffDoneSorted.slice(0,10).map(([s,c],i)=>{ const tot=base.filter(r=>r._staff===s).length; return `<tr><td class="rank-${i+1<=3?i+1:'x'}">${i+1}</td><td>${s}</td><td class="num">${c}</td><td class="num">${tot}</td><td class="num">${pct(c,tot)}</td></tr>`; }).join('')||'<tr><td colspan="5" style="text-align:center;color:var(--text3);padding:12px;">データなし</td></tr>'}</tbody>
+      </table></div>
+    </div>
+    <div class="card">
+      <div class="card-head"><div class="card-title">工事完了：アポ担当別</div></div>
+      <div class="tbl-wrap"><table class="person-table">
+        <thead><tr><th>順位</th><th>アポ担当</th><th class="num">完了数</th><th class="num">完了率</th></tr></thead>
+        <tbody>${apoDoneSorted.slice(0,10).map(([a,c],i)=>{ const tot=base.filter(r=>r._apo===a).length; return `<tr><td class="rank-${i+1<=3?i+1:'x'}">${i+1}</td><td>${a}</td><td class="num">${c}</td><td class="num">${pct(c,tot)}</td></tr>`; }).join('')||'<tr><td colspan="4" style="text-align:center;color:var(--text3);padding:12px;">データなし</td></tr>'}</tbody>
+      </table></div>
+    </div>
+    <div class="card">
+      <div class="card-head"><div class="card-title">キャンセル：営業担当別</div></div>
+      <div class="tbl-wrap"><table class="person-table">
+        <thead><tr><th>順位</th><th>営業担当</th><th class="num">件数</th><th class="num">申込数</th><th class="num">キャンセル率</th></tr></thead>
+        <tbody>${staffCancelSorted.slice(0,10).map(([s,c],i)=>{ const tot=base.filter(r=>r._staff===s).length; return `<tr><td>${i+1}</td><td>${s}</td><td class="num">${c}</td><td class="num">${tot}</td><td class="num" style="color:var(--red)">${pct(c,tot)}</td></tr>`; }).join('')||'<tr><td colspan="5" style="text-align:center;color:var(--text3);padding:12px;">データなし</td></tr>'}</tbody>
+      </table></div>
+    </div>
+    <div class="card">
+      <div class="card-head"><div class="card-title">ステータス別件数（N月申込）</div></div>
+      <div style="padding:12px 16px;">${(()=>{ const sm={}; base.forEach(r=>{ const s=r._atocak||'不明'; sm[s]=(sm[s]||0)+1; }); const ss=Object.entries(sm).sort((a,b)=>b[1]-a[1]); const mx=ss[0]?.[1]||1; return ss.map(([s,c],i)=>`<div class="bar-row"><div class="bar-lbl">${s}</div><div class="bar-track"><div class="bar-fill" style="width:${(c/mx*100).toFixed(1)}%;background:${colors8[i%8]}"></div></div><div class="bar-cnt">${c}</div></div>`).join(''); })()}</div>
+    </div>
+  </div>
+
+  <!-- ===== 開通日ベース ===== -->
+  <div class="sec-title">開通日ベース（N月 = ${ny}年${parseInt(nm)}月に開通した件数）</div>
+
+  <div class="stat-grid stat-grid-4" style="margin-bottom:18px;">
+    <div class="stat-card green"><div class="sc-lbl">工事完了数（開通）</div><div class="sc-val">${kanryoTotal.toLocaleString()}</div><div class="sc-sub">${N.replace('-','年')}月の開通・完了</div></div>
+    <div class="stat-card red"><div class="sc-lbl">解約件数</div><div class="sc-val">${kaiyakuTotal.toLocaleString()}</div><div class="sc-sub">${N.replace('-','年')}月の解約成立</div></div>
+    <div class="stat-card blue"><div class="sc-lbl">支払登録件数</div><div class="sc-val">${shiharaiTotal.toLocaleString()}</div><div class="sc-sub">${N.replace('-','年')}月の支払登録</div></div>
+    <div class="stat-card purple"><div class="sc-lbl">支払登録率</div><div class="sc-val">${shiharaiRate}</div><div class="sc-sub">開通数に対する支払登録率</div><div class="prog-wrap"><div class="prog-track"><div class="prog-fill" style="width:${shiharaiRate};background:var(--purple)"></div></div></div></div>
+  </div>
+
+  <div style="display:grid;grid-template-columns:1fr 1fr;gap:14px;margin-bottom:18px;">
+    <div class="card">
+      <div class="card-head"><div class="card-title">商材別 開通件数</div></div>
+      <div style="padding:12px 16px;">${(()=>{ const kp=Object.entries(kanryoProd).sort((a,b)=>b[1]-a[1]); const mx=kp[0]?.[1]||1; return kp.length?kp.map(([p,c])=>`<div class="bar-row"><div class="bar-lbl">${p}</div><div class="bar-track"><div class="bar-fill" style="width:${(c/mx*100).toFixed(1)}%;background:${PCOLORS[p]||'#6b7280'}"></div></div><div class="bar-cnt">${c}</div></div>`).join(''):'<div style="color:var(--text3);font-size:12px;text-align:center;padding:12px;">データなし</div>'; })()}</div>
+    </div>
+    <div class="card">
+      <div class="card-head"><div class="card-title">開通の申込月内訳 TOP5</div><div style="font-size:11px;color:var(--text3);">どの月の申込が開通したか</div></div>
+      <div class="tbl-wrap"><table class="person-table">
+        <thead><tr><th>申込月</th><th class="num">開通件数</th></tr></thead>
+        <tbody>${kanryoByApplySorted.map(([m,c])=>`<tr><td>${m.replace('-','年')}月申込</td><td class="num">${c}</td></tr>`).join('')||'<tr><td colspan="2" style="text-align:center;color:var(--text3);padding:12px;">データなし</td></tr>'}</tbody>
+      </table></div>
+    </div>
+  </div>
+  `;
+}
+
+// ===== PRODUCT NAV =====
+function buildProdNav(){
+  document.getElementById('product-nav').innerHTML=Object.keys(DB).map(p=>`
+    <div class="nav-item" onclick="navProd('${p}',this)" id="pnav_${esc(p)}">
+      <span class="nav-dot" style="background:${PCOLORS[p]||'#6b7280'}"></span>${p}
+      <span style="margin-left:auto;font-family:'DM Mono',monospace;font-size:10px;color:var(--text3)">${DB[p].rows.length}</span>
+    </div>`).join('');
+}
+function navProd(name,el){
+  document.querySelectorAll('.panel').forEach(p=>p.classList.remove('active'));
+  document.querySelectorAll('.nav-item').forEach(n=>n.classList.remove('active'));
+  const p=document.getElementById('panel_prod_'+esc(name));
+  if(p) p.classList.add('active');
+  if(el) el.classList.add('active');
+  closeDrawer();
+  if(!filteredProd[name]){ filteredProd[name]=[...DB[name].rows]; currentProdPage[name]=1; }
+  renderProdTable(name);
+}
+
+// ===== PRODUCT PANELS =====
+function buildProdPanels(){
+  const c=document.getElementById('product-panels');
+  c.innerHTML=Object.keys(DB).map(p=>`
+    <div class="panel" id="panel_prod_${esc(p)}">
+      <div class="page-title">${p}</div>
+      <div class="page-sub">${DB[p].rows.length.toLocaleString()} 件 ／ 行クリックで顧客詳細</div>
+      <div class="card">
+        <div class="filter-bar">
+          <span class="fl">代理店</span><select class="fs" id="pf_ag_${esc(p)}" onchange="applyProdFilter('${p}')"><option value="">すべて</option></select>
+          <span class="fl">ステータス</span><select class="fs" id="pf_st_${esc(p)}" onchange="applyProdFilter('${p}')"><option value="">すべて</option></select>
+          <span class="fl">営業担当</span><select class="fs" id="pf_sf_${esc(p)}" onchange="applyProdFilter('${p}')"><option value="">すべて</option></select>
+          <input class="fi" id="pf_sr_${esc(p)}" placeholder="顧客名・電話・申込番号..." oninput="applyProdFilter('${p}')">
+          <button class="btn btn-ghost" onclick="resetProdFilter('${p}')">リセット</button>
+          <button class="btn btn-ok" onclick="exportProd('${p}')">CSV出力</button>
+          <div class="rc">表示: <span id="pc_${esc(p)}">0</span> 件</div>
+        </div>
+        <div class="tbl-wrap"><table class="main-tbl"><thead id="ph_${esc(p)}"></thead><tbody id="pb_${esc(p)}"></tbody></table></div>
+        <div class="pagination" id="pp_${esc(p)}"></div>
+      </div>
+    </div>`).join('');
+  Object.keys(DB).forEach(p=>{ buildProdFilters(p); buildProdHead(p); });
+}
+
+function buildProdFilters(p){
+  const rows=DB[p].rows;
+  const sf=(id,opts)=>{ const el=document.getElementById(id); if(el) el.innerHTML='<option value="">すべて</option>'+opts.map(o=>`<option>${o}</option>`).join(''); };
+  sf(`pf_ag_${esc(p)}`,[...new Set(rows.map(r=>r._agency))].sort());
+  sf(`pf_st_${esc(p)}`,[...new Set(rows.map(r=>r._atocak))].sort());
+  sf(`pf_sf_${esc(p)}`,[...new Set(rows.map(r=>r._staff))].sort());
+  filteredProd[p]=[...rows]; currentProdPage[p]=1;
+}
+
+function getProdCols(p){
+  const base=[{key:'_id',label:'No.'},{key:'_agency',label:'代理店名'},{key:'_date',label:'申込日'},{key:'_staff',label:'営業担当'},{key:'_name',label:'顧客名'},{key:'_phone',label:'電話番号'},{key:'_kubun',label:'申込区分'},{key:'_atocak',label:'アトカクステータス'},{key:'_kojiDate',label:'工事予定日'},{key:'_kanryo',label:'完了日'}];
+  (PROD_EXTRA[p]||[]).forEach(col=>{ if(DB[p]?.headers.includes(col)) base.push({key:col,label:col}); });
+  return base;
+}
+
+function buildProdHead(p){
+  const el=document.getElementById(`ph_${esc(p)}`);
+  if(el){ const cols=getProdCols(p); el.innerHTML='<tr>'+cols.map(c=>`<th>${c.label}</th>`).join('')+'</tr>'; }
+}
+
+function applyProdFilter(p){
+  const ag=gv(`pf_ag_${esc(p)}`), st=gv(`pf_st_${esc(p)}`), sf=gv(`pf_sf_${esc(p)}`);
+  const sr=(document.getElementById(`pf_sr_${esc(p)}`)?.value||'').toLowerCase();
+  filteredProd[p]=DB[p].rows.filter(r=>{
+    if(ag&&r._agency!==ag) return false;
+    if(st&&r._atocak!==st) return false;
+    if(sf&&r._staff!==sf) return false;
+    if(sr&&!r._name.toLowerCase().includes(sr)&&!r._phone.includes(sr)&&!r._id.includes(sr)) return false;
+    return true;
+  });
+  currentProdPage[p]=1; renderProdTable(p);
+}
+function resetProdFilter(p){
+  ['ag','st','sf'].forEach(k=>{ const el=document.getElementById(`pf_${k}_${esc(p)}`); if(el) el.value=''; });
+  const si=document.getElementById(`pf_sr_${esc(p)}`); if(si) si.value='';
+  filteredProd[p]=[...DB[p].rows]; currentProdPage[p]=1; renderProdTable(p);
+}
+
+function renderProdTable(p){
+  const data=filteredProd[p]||[];
+  const cnt=document.getElementById(`pc_${esc(p)}`); if(cnt) cnt.textContent=data.length.toLocaleString();
+  const tbody=document.getElementById(`pb_${esc(p)}`); if(!tbody) return;
+  const cols=getProdCols(p);
+  const start=(currentProdPage[p]-1)*PAGE;
+  const page=data.slice(start,start+PAGE);
+  if(!page.length){ tbody.innerHTML=`<tr><td colspan="${cols.length}"><div class="empty"><div class="empty-icon">🔍</div>該当データなし</div></td></tr>`; return; }
+  tbody.innerHTML=page.map(r=>`<tr onclick="openDrawer(${r._idx})">${cols.map(c=>`<td title="${r[c.key]||''}">${c.key==='_atocak'?stBadge(r[c.key]):(r[c.key]||'')}</td>`).join('')}</tr>`).join('');
+  renderPager(document.getElementById(`pp_${esc(p)}`),currentProdPage[p],Math.ceil(data.length/PAGE),pg=>{ currentProdPage[p]=pg; renderProdTable(p); });
+}
+
+// ===== ALL TABLE =====
+function buildAllFilters(){
+  const sf=(id,opts)=>{ const el=document.getElementById(id); if(el) el.innerHTML='<option value="">すべて</option>'+opts.map(o=>`<option>${o}</option>`).join(''); };
+  sf('fa-prod',[...new Set(allRows.map(r=>r._product))].sort());
+  sf('fa-status',[...new Set(allRows.map(r=>r._atocak))].sort());
+  sf('fa-agency',[...new Set(allRows.map(r=>r._agency))].sort());
+}
+function applyAllFilter(){
+  const prod=gv('fa-prod'), status=gv('fa-status'), agency=gv('fa-agency');
+  const search=gv('fa-search').toLowerCase();
+  filteredAll=allRows.filter(r=>{
+    if(prod&&r._product!==prod) return false;
+    if(status&&r._atocak!==status) return false;
+    if(agency&&r._agency!==agency) return false;
+    if(search&&!r._name.toLowerCase().includes(search)&&!r._phone.includes(search)&&!r._id.includes(search)) return false;
+    return true;
+  });
+  currentAllPage=1; renderAllTable();
+}
+function resetAllFilter(){
+  ['fa-prod','fa-status','fa-agency'].forEach(id=>{ const el=document.getElementById(id); if(el) el.value=''; });
+  const si=document.getElementById('fa-search'); if(si) si.value='';
+  filteredAll=[...allRows]; currentAllPage=1; renderAllTable();
+}
+function renderAllTable(){
+  document.getElementById('all-count').textContent=filteredAll.length.toLocaleString();
+  const tbody=document.getElementById('all-body');
+  const start=(currentAllPage-1)*PAGE;
+  const page=filteredAll.slice(start,start+PAGE);
+  if(!page.length){ tbody.innerHTML='<tr><td colspan="11"><div class="empty"><div class="empty-icon">🔍</div>該当データなし</div></td></tr>'; document.getElementById('all-page').innerHTML=''; return; }
+  tbody.innerHTML=page.map(r=>`<tr onclick="openDrawer(${r._idx})">
+    <td><span style="display:inline-block;width:7px;height:7px;border-radius:50%;background:${PCOLORS[r._product]||'#6b7280'};margin-right:5px;vertical-align:middle;"></span>${r._product}</td>
+    <td class="mono">${r._id}</td><td title="${r._agency}">${r._agency}</td><td>${r._date}</td>
+    <td>${r._staff}</td><td title="${r._name}">${r._name}</td>
+    <td class="mono">${r._phone}</td><td>${r._kubun}</td>
+    <td>${stBadge(r._atocak)}</td><td>${r._kojiDate}</td><td>${r._kanryo}</td>
+  </tr>`).join('');
+  renderPager(document.getElementById('all-page'),currentAllPage,Math.ceil(filteredAll.length/PAGE),pg=>{ currentAllPage=pg; renderAllTable(); });
+}
+
+// ===== DRAWER =====
+function openDrawer(idx){
+  const r=allRows[idx]; if(!r) return;
+  document.getElementById('d-name').textContent=r._name||'—';
+  document.getElementById('d-sub2').textContent=`${r._product} ／ ${r._agency} ／ 申込日: ${r._date}`;
+  const f=(lbl,val,full=false)=>`<div class="d-field${full?' full':''}"><div class="dfl">${lbl}</div><div class="dfv${!val?' empty':''}">${val||'—'}</div></div>`;
+  document.getElementById('drawer-body').innerHTML=`
+    <div class="d-sec"><div class="d-sec-ttl">契約情報</div><div class="d-grid">
+      ${f('ID / 申込番号',r._id+(r['申込番号']&&r['申込番号']!==r._id?' / '+r['申込番号']:''))}
+      ${f('代理店名',r._agency)}${f('商流',r['商流']||'')}${f('申込日',r._date)}
+      ${f('営業担当',r._staff)}${f('アポ担当',r._apo)}
+      ${f('申込区分',r._kubun)}${f('アトカクステータス',stBadge(r._atocak))}
+    </div></div>
+    <div class="d-sec"><div class="d-sec-ttl">顧客情報</div><div class="d-grid">
+      ${f('顧客名（漢字）',r._name)}${f('顧客名（カナ）',r['ご契約者名（カナ）']||r['申込者氏名 姓(カナ)']||'')}
+      ${f('電話番号①',r._phone)}${f('電話番号②',r['連絡先②']||'')}
+      ${f('生年月日',r['生年月日']||'')}${f('性別',r['性別']||'')}
+      ${f('住所',[r['都道府県名']||r['都道府県'],r['市区町村'],r['番地'],r['マンション名']||r['ビル・建物名'],r['部屋番号']||r['部屋号室']].filter(Boolean).join(' '),true)}
+    </div></div>
+    <div class="d-sec"><div class="d-sec-ttl">工事・完了情報</div><div class="d-grid">
+      ${f('工事予定日',r._kojiDate)}${f('工事時間',r['工事時間']||r['工事予定時間']||'')}
+      ${f('派遣工事',r['派遣工事']||r['派遣工事有無']||'')}${f('工事完了日',r['工事完了日']||'')}
+      ${f('開通日',r['開通日']||r['ISP開通日']||'')}${f('初回認証日',r['初回認証日']||'')}
+      ${f('支払登録日',r._shiharai)}${f('解約日',r._kaiyaku)}
+      ${f('本確ステータス',r['本確ステータス']||'')}${f('NG管理',r['NG管理ステータス']||'')}
+    </div></div>
+    ${(PROD_EXTRA[r._product]||[]).some(k=>r[k])?`<div class="d-sec"><div class="d-sec-ttl">${r._product} 固有項目</div><div class="d-grid">${(PROD_EXTRA[r._product]||[]).filter(k=>r[k]).map(k=>f(k,r[k])).join('')}</div></div>`:''}
+    ${r._bikou?`<div class="d-sec"><div class="d-sec-ttl">備考</div><div class="d-grid"><div class="d-field full"><div class="dfl">備考</div><div class="dfv bikou">${r._bikou}</div></div></div></div>`:''}
+    <div style="font-size:10px;color:var(--text3);margin-top:6px;">${r._update}</div>
+  `;
+  document.getElementById('drawer').classList.add('open');
+}
+function closeDrawer(){ document.getElementById('drawer').classList.remove('open'); }
+
+// ===== MASTER =====
+function buildMaster(){
+  const c=document.getElementById('master-product-cards');
+  c.innerHTML=Object.keys(DB).map((p)=>`<div class="product-card" onclick="showMasterDetail('${p}')">
+    <div class="pc-name"><span class="nav-dot" style="background:${PCOLORS[p]||'#6b7280'}"></span>${p}</div>
+    <div class="pc-count">${DB[p].rows.length.toLocaleString()}</div>
+    <div class="pc-sub">${DB[p].headers.length} 項目 ／ クリックで詳細</div>
+  </div>`).join('')||'<div style="color:var(--text3);font-size:12px;padding:8px;">商材がまだインポートされていません</div>';
+}
+function showMasterDetail(p){
+  document.getElementById('master-detail-title').textContent=`${p} ／ 項目一覧（${DB[p].headers.length}列）`;
+  const commonKeys=Object.values(COMMON_MAP).flat();
+  const extra=PROD_EXTRA[p]||[];
+  document.getElementById('master-detail-body').innerHTML=DB[p].headers.map((h,i)=>{
+    const isC=commonKeys.some(k=>k===h||h.includes(k.slice(0,4)));
+    const isE=extra.includes(h);
+    return `<div class="master-row"><div class="m-num">${i+1}</div><div class="m-name">${h}</div><div>${isC?'<span class="m-tag m-common">共通</span>':isE?'<span class="m-tag m-extra">固有</span>':''}</div></div>`;
+  }).join('');
+  document.getElementById('master-detail-card').style.display='block';
+  document.getElementById('master-detail-card').scrollIntoView({behavior:'smooth'});
+}
+
+// ===== STATUS BADGE =====
+function stBadge(s){
+  if(!s) return '<span class="st st-gray">—</span>';
+  let c='st-gray';
+  if(s.includes('受付')) c='st-blue';
+  else if(s.includes('工事日調整')||s.includes('調整中')) c='st-yellow';
+  else if(s.includes('サービス開始')||s.includes('開通')||s.includes('完了')||s.includes('エントリー完了')) c='st-green';
+  else if(s.includes('不出')) c='st-red';
+  else if(s.includes('キャンセル')||s.includes('中止')) c='st-gray';
+  else if(s.includes('SMS')||s.includes('依頼')) c='st-purple';
+  return `<span class="st ${c}">${s}</span>`;
+}
+
+// ===== PAGER =====
+function renderPager(el,cur,total,cb){
+  if(!el||total<=1){ if(el) el.innerHTML=''; return; }
+  const pages=[];
+  if(total<=7){ for(let i=1;i<=total;i++) pages.push(i); }
+  else{ pages.push(1); if(cur>3) pages.push('…'); for(let i=Math.max(2,cur-1);i<=Math.min(total-1,cur+1);i++) pages.push(i); if(cur<total-2) pages.push('…'); pages.push(total); }
+  let h=`<div class="pb${cur===1?' active':''}" onclick="${cur>1?`(${cb.toString()})(${cur-1})`:''}">‹</div>`;
+  pages.forEach(p=>{ h+=p==='…'?`<div class="pb">…</div>`:`<div class="pb${p===cur?' active':''}" onclick="(${cb.toString()})(${p})">${p}</div>`; });
+  h+=`<div class="pb${cur===total?' active':''}" onclick="${cur<total?`(${cb.toString()})(${cur+1})`:''}">›</div>`;
+  el.innerHTML=h;
+}
+
+// ===== EXPORT =====
+function exportAll(){
+  if(!filteredAll.length){ showToast('データなし','err'); return; }
+  const h=['商材','No.','代理店名','申込日','営業担当','顧客名','電話番号','申込区分','アトカクステータス','工事予定日','完了日'];
+  dlCSV(h,filteredAll.map(r=>[r._product,r._id,r._agency,r._date,r._staff,r._name,r._phone,r._kubun,r._atocak,r._kojiDate,r._kanryo]),'全商材_契約一覧');
+}
+function exportProd(p){
+  const data=filteredProd[p]||[];
+  if(!data.length){ showToast('データなし','err'); return; }
+  const cols=getProdCols(p);
+  dlCSV(cols.map(c=>c.label),data.map(r=>cols.map(c=>r[c.key]||'')),`${p}_契約一覧`);
+}
+function dlCSV(headers,rows,name){
+  const csv='\uFEFF'+[headers,...rows].map(r=>r.map(v=>`"${(v||'').replace(/"/g,'""')}"`).join(',')).join('\n');
+  const a=document.createElement('a'); a.href=URL.createObjectURL(new Blob([csv],{type:'text/csv'})); a.download=`${name}_${new Date().toISOString().slice(0,10)}.csv`; a.click();
+  showToast(`✓ ${rows.length.toLocaleString()} 件を出力`,'ok');
+}
+
+// ===== CLEAR =====
+function clearAll(){
+  DB={}; allRows=[]; filteredAll=[]; filteredProd={}; currentAllPage=1;
+  document.getElementById('product-nav').innerHTML=''; document.getElementById('product-panels').innerHTML='';
+  rebuildAll(); showToast('全データを削除しました');
+}
+
+// ===== TOAST =====
+function showToast(msg,type=''){
+  const t=document.getElementById('toast'); t.textContent=msg; t.className='toast show'+(type?' '+type:'');
+  setTimeout(()=>t.className='toast',3000);
+}
+</script>
+<script>
+if('serviceWorker' in navigator){
+  window.addEventListener('load',()=>{
+    navigator.serviceWorker.register('/sw.js').then(r=>{
+      console.log('SW登録完了');
+    }).catch(e=>console.log('SW登録失敗',e));
+  });
+}
+</script>
+</body>
+</html>
