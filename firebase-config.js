@@ -8,3 +8,4 @@ const firebaseConfig = {
 };
 
 window.FIREBASE_CONFIG = firebaseConfig;
+window.FIREBASE_ENABLED = true;
