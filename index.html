@@ -486,11 +486,75 @@ select.form-control { cursor: pointer; }
 }
 
 /* ===== Responsive ===== */
+/* ===== モバイルボトムナビ ===== */
+#mobile-bottom-nav {
+  display: none;
+  position: fixed;
+  bottom: 0; left: 0; right: 0;
+  background: var(--surface);
+  border-top: 1px solid var(--border);
+  z-index: 1000;
+  padding: 4px 0 env(safe-area-inset-bottom);
+  box-shadow: 0 -2px 10px rgba(0,0,0,0.08);
+}
+.mobile-nav-items {
+  display: flex;
+  justify-content: space-around;
+  align-items: center;
+}
+.mobile-nav-item {
+  display: flex; flex-direction: column; align-items: center;
+  padding: 6px 8px; border: none; background: none;
+  color: var(--text3); cursor: pointer; min-width: 56px;
+  font-size: 10px; gap: 2px; border-radius: 8px;
+  transition: color 0.15s;
+}
+.mobile-nav-item.active { color: var(--accent); }
+.mobile-nav-item span:first-child { font-size: 20px; }
+
+#mobile-menu-btn {
+  display: none;
+  position: fixed;
+  top: 12px; right: 12px;
+  z-index: 1001;
+  background: var(--accent);
+  color: white;
+  border: none;
+  border-radius: 50%;
+  width: 44px; height: 44px;
+  font-size: 20px;
+  cursor: pointer;
+  box-shadow: var(--shadow);
+  align-items: center;
+  justify-content: center;
+}
+
+#sidebar-overlay {
+  display: none;
+  position: fixed;
+  inset: 0;
+  background: rgba(0,0,0,0.4);
+  z-index: 999;
+}
+
 @media (max-width: 768px) {
-  #sidebar { display: none; }
+  #sidebar {
+    position: fixed;
+    left: -260px;
+    top: 0; bottom: 0;
+    z-index: 1000;
+    transition: left 0.25s ease;
+    box-shadow: 4px 0 20px rgba(0,0,0,0.15);
+  }
+  #sidebar.mobile-open { left: 0; }
+  #sidebar-overlay.active { display: block; }
+  #mobile-menu-btn { display: flex; }
+  #mobile-bottom-nav { display: block; }
   .form-row { grid-template-columns: 1fr; }
   .grid-2, .grid-3 { grid-template-columns: 1fr; }
-  #content { padding: 16px; }
+  #content { padding: 12px; padding-bottom: 80px; }
+  .page-header { flex-wrap: wrap; gap: 8px; }
+  .kpi-grid { grid-template-columns: 1fr 1fr; }
 }
 
 /* ===== Mapping Table ===== */
@@ -1952,26 +2016,47 @@ function processFile(file) {
 function parseCSV(text) {
   // Handle BOM
   if (text.charCodeAt(0) === 0xFEFF) text = text.slice(1);
-  const lines = text.split(/\r?\n/).filter(l => l.trim());
-  if (lines.length === 0) throw new Error('空のファイルです');
-  const parseRow = (line) => {
-    const result = []; let cur = ''; let inQ = false;
-    for (let i = 0; i < line.length; i++) {
-      const ch = line[i];
-      if (ch === '"') { if (inQ && line[i+1] === '"') { cur += '"'; i++; } else inQ = !inQ; }
-      else if (ch === ',' && !inQ) { result.push(cur); cur = ''; }
-      else cur += ch;
+  if (!text.trim()) throw new Error('空のファイルです');
+
+  // セル内改行に対応した完全なCSVパーサー
+  const parseAllRows = (str) => {
+    const rows = [];
+    let cur = '';
+    let inQ = false;
+    let row = [];
+    for (let i = 0; i < str.length; i++) {
+      const ch = str[i];
+      const next = str[i+1];
+      if (ch === '"') {
+        if (inQ && next === '"') { cur += '"'; i++; }
+        else inQ = !inQ;
+      } else if (ch === ',' && !inQ) {
+        row.push(cur); cur = '';
+      } else if ((ch === '\r' && next === '\n') && !inQ) {
+        row.push(cur); cur = '';
+        rows.push(row); row = []; i++;
+      } else if (ch === '\n' && !inQ) {
+        row.push(cur); cur = '';
+        rows.push(row); row = [];
+      } else {
+        cur += ch;
+      }
     }
-    result.push(cur);
-    return result;
+    if (cur || row.length) { row.push(cur); rows.push(row); }
+    return rows;
   };
-  const cols = parseRow(lines[0]);
-  const rows = lines.slice(1).map(l => {
-    const vals = parseRow(l);
-    const obj = {};
-    cols.forEach((c,i) => obj[c] = vals[i] || '');
-    return obj;
-  }).filter(r => Object.values(r).some(v => v));
+
+  const allRows = parseAllRows(text);
+  if (allRows.length === 0) throw new Error('空のファイルです');
+  const cols = allRows[0];
+  const rows = allRows.slice(1)
+    .filter(r => r.some(v => v && v.trim())) // 空行を除去
+    .map(vals => {
+      const obj = {};
+      cols.forEach((c,i) => obj[c] = (vals[i] || '').replace(/\r?\n/g, ' ').trim());
+      return obj;
+    })
+    .filter(r => Object.values(r).some(v => v)); // 全項目空の行を除去
   return { columns: cols, rows };
 }
 
@@ -6351,5 +6436,47 @@ window.addEventListener('load', async () => {
   }
 });
 </script>
+<!-- モバイルメニューボタン -->
+<button id="mobile-menu-btn" onclick="toggleMobileMenu()">☰</button>
+<div id="sidebar-overlay" onclick="closeMobileMenu()"></div>
+
+<!-- ボトムナビゲーション -->
+<div id="mobile-bottom-nav">
+  <div class="mobile-nav-items">
+    <button class="mobile-nav-item" onclick="navigate('dashboard');closeMobileMenu()">
+      <span>🏠</span><span>ホーム</span>
+    </button>
+    <button class="mobile-nav-item" onclick="navigate('customers');closeMobileMenu()">
+      <span>👥</span><span>顧客</span>
+    </button>
+    <button class="mobile-nav-item" onclick="navigate('form-view');closeMobileMenu()">
+      <span>✏️</span><span>入力</span>
+    </button>
+    <button class="mobile-nav-item" onclick="navigate('kanban');closeMobileMenu()">
+      <span>📌</span><span>カンバン</span>
+    </button>
+    <button class="mobile-nav-item" onclick="toggleMobileMenu()">
+      <span>☰</span><span>メニュー</span>
+    </button>
+  </div>
+</div>
+
+<script>
+function toggleMobileMenu() {
+  const sidebar = document.getElementById('sidebar');
+  const overlay = document.getElementById('sidebar-overlay');
+  sidebar.classList.toggle('mobile-open');
+  overlay.classList.toggle('active');
+}
+function closeMobileMenu() {
+  const sidebar = document.getElementById('sidebar');
+  const overlay = document.getElementById('sidebar-overlay');
+  sidebar.classList.remove('mobile-open');
+  overlay.classList.remove('active');
+}
+// ナビゲーション時にモバイルメニューを閉じる
+const _origNavigate = typeof navigate !== 'undefined' ? navigate : null;
+</script>
+
 </body>
 </html>
